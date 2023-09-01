@@ -179,7 +179,7 @@ kubectl port-forward --address localhost -n kepler service/kepler-exporter 9102:
 kubectl port-forward --address localhost -n monitoring service/prometheus-k8s 9090:9090 &
 ```
 
-To support validation cases comparison base, we are introcuding an indepentent RAPL-based energy collection and power consumption calculation tool called `validator` on Intel X86 BareMetal platforms.
+To support validation cases comparison base, we are introducing an indepentent RAPL-based energy collection and power consumption calculation tool called `validator` on Intel X86 BareMetal platforms.
 
 Test cases could use the `valiator` sampling and calculation results to compare with Kepler exported and Promethes aggregated query results.
 
@@ -252,7 +252,7 @@ N/A
 
 Three solutions mentioned in previous comments: Kind, k3d/k3s, microshift.
 
-* Kind is current available solution in Kelper. It works well on BM, but has known issues in VM.
+* Kind is current available and widely-used solution in Kelper.
 
 * Microshift has also been supported in 2023 Q3. It is beneficial supplement to Kind and especially for local deployment verfication for Openshift scenarios.
 
