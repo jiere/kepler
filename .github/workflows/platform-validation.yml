@@ -56,7 +56,7 @@ jobs:
           context: .
           platforms: linux/amd64
           push: true
-          tags: quay.io/sustainable_computing_io/kepler-validator:latest
+          tags: quay.io/renj1/kepler-validator:latest
           labels: latest
           file: build/Dockerfile.kepler-validator
 
