@@ -9,6 +9,8 @@ env:
   KEPLER_FILE_NAME: "kepler.tar.gz"
   VALIDATOR_FILE_NAME: "validator.tar.gz"
   ARTIFACT_DIR: "/tmp/artifacts"
+  http_proxy: "http://child-prc.intel.com:913"
+  no_proxy: "localhost,127.0.0.1,::1"
 
 jobs:
   build-artifacts:
@@ -20,6 +22,11 @@ jobs:
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
+        with:
+            driver-opts: |
+              env.http_proxy=${{ env.http_proxy }}
+              env.https_proxy=${{ env.http_proxy }}
+              env.no_proxy=${{ env.no_proxy }}
       - name: Login to Quay
         uses: docker/login-action@v1
         with:
@@ -54,6 +61,9 @@ jobs:
         uses: docker/build-push-action@v4
         with:
           context: .
+          build-args: |
+            "http_proxy=${{ env.http_proxy }}"
+            "https_proxy=${{ env.http_proxy }}"
           platforms: linux/amd64
           push: true
           tags: quay.io/renj1/kepler-validator:latest
