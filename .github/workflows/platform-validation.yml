@@ -40,9 +40,9 @@ jobs:
           path: ${{env.OUTPUT_DIR}}${{env.KEPLER_FILE_NAME}}
           retention-days: 1
 
-    - name: Build and push kepler-validator latest
-      uses: docker/build-push-action@v4
-      with:
+      - name: Build and push kepler-validator latest
+        uses: docker/build-push-action@v4
+        with:
           context: .
           platforms: linux/amd64
           push: true
