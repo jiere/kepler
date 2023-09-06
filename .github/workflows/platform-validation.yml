@@ -40,18 +40,28 @@ jobs:
           path: ${{env.OUTPUT_DIR}}${{env.KEPLER_FILE_NAME}}
           retention-days: 1
 
-      - name: build and export platform-validation test image
+    - name: Build and push kepler-validator latest
+      uses: docker/build-push-action@v4
+      with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: quay.io/sustainable_computing_io/kepler-validator:latest
+          labels: latest
+          file: build/Dockerfile.kepler-validator
+
+      - name: re-tag and export kepler-validator image
         run: |
-          make build-validation-container
+          make re-tag
           make save-image
         env:
           IMAGE_REPO: "localhost:5001"
-          IMAGE_NAME: "platform-validation"
+          IMAGE_NAME: "kepler-validator"
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
           IMAGE_OUTPUT_PATH: ${{env.OUTPUT_DIR}}${{env.VALIDATOR_FILE_NAME}}
 
-      - name: save platform-validation image as artifact
+      - name: save kepler-validator image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: validator
@@ -73,7 +83,7 @@ jobs:
         with:
           name: kepler
 
-      - name: download platform-validation image artifact
+      - name: download kepler-validator image artifact
         uses: actions/download-artifact@v3
         with:
           name: validator
@@ -95,11 +105,11 @@ jobs:
           CTR_CMD: docker
           INPUT_PATH: ${{env.KEPLER_FILE_NAME}}
 
-      - name: import platform-validation image
+      - name: import kepler-validator image
         run: make load-image
         env:
           IMAGE_REPO: "localhost:5001"
-          IMAGE_NAME: "platform-validation"
+          IMAGE_NAME: "kepler-validator"
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
           INPUT_PATH: ${{env.VALIDATOR_FILE_NAME}}
@@ -109,7 +119,7 @@ jobs:
           make get-power
         env:
           IMAGE_REPO: "localhost:5001"
-          IMAGE_NAME: "platform-validation"
+          IMAGE_NAME: "kepler-validator"
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
 
@@ -131,13 +141,13 @@ jobs:
           IMAGE_TAG: "devel"
           CTR_CMD: docker
 
-      - name: push platform-validation image to local registry
+      - name: push kepler-validator image to local registry
         run: |
           make push-image
           make image-prune
         env:
           IMAGE_REPO: "localhost:5001"
-          IMAGE_NAME: "platform-validation"
+          IMAGE_NAME: "kepler-validator"
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
 
@@ -146,7 +156,7 @@ jobs:
           make get-power
         env:
           IMAGE_REPO: "localhost:5001"
-          IMAGE_NAME: "platform-validation"
+          IMAGE_NAME: "kepler-validator"
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
 
@@ -171,7 +181,7 @@ jobs:
         env:
           CLUSTER_PROVIDER: ${{matrix.cluster_provider}}
           IMAGE_REPO: "localhost:5001"
-          IMAGE_NAME: "platform-validation"
+          IMAGE_NAME: "kepler-validator"
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
           kepler_address: localhost:9102

@@ -372,8 +372,6 @@ e2e:
 
 ### platform-validation ###
 
-VALIDATION_DOCKERFILE := $(SRC_ROOT)/build/Dockerfile.platform-validation
-
 build-validator: tidy-vendor format
 	@echo TAGS=$(GO_BUILD_TAGS)
 	@mkdir -p "$(CROSS_BUILD_BINDIR)/$(GOOS)_$(GOARCH)"
@@ -381,10 +379,9 @@ build-validator: tidy-vendor format
 	cp $(CROSS_BUILD_BINDIR)/$(GOOS)_$(GOARCH)/validator $(CROSS_BUILD_BINDIR)
 .PHONY: build-validator
 
-build-validation-container:
-	$(CTR_CMD) build -t $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) \
-		-f $(VALIDATION_DOCKERFILE) .
-.PHONY: build-validation-container
+re-tag:
+	$(CTR_CMD) tag quay.io/sustainable_computing_io/kepler-validator:latest $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG)
+.PHONY: re-tag
 
 get-power:
 	$(CTR_CMD) run -i --rm -v $(SRC_ROOT)/e2e/platform-validation:/output $(IMAGE_REPO)/$(IMAGE_NAME):$(IMAGE_TAG) /usr/bin/validator
