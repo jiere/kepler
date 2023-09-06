@@ -14,15 +14,25 @@ jobs:
   build-artifacts:
     runs-on: [self-hosted, linux, x64]
     steps:
-      - name: checkout source
+      - name: Checkout
         uses: actions/checkout@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Login to Quay
+        uses: docker/login-action@v1
+        with:
+          registry: quay.io/renj1
+          username: ${{ secrets.BOT_NAME }}
+        password: ${{ secrets.BOT_TOKEN }}
 
-      - name: install Go
+      - name: Install Go
         uses: actions/setup-go@v3
         with:
           go-version: ${{env.GO_VERSION}}
 
-      - name: build and export Kepler image
+      - name: Build and export Kepler image
         run: |
           make build_containerized
           make save-image
@@ -33,7 +43,7 @@ jobs:
           CTR_CMD: docker
           IMAGE_OUTPUT_PATH: ${{env.OUTPUT_DIR}}${{env.KEPLER_FILE_NAME}}
 
-      - name: save Kepler image as artifact
+      - name: Save Kepler image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: kepler
@@ -50,7 +60,7 @@ jobs:
           labels: latest
           file: build/Dockerfile.kepler-validator
 
-      - name: re-tag and export kepler-validator image
+      - name: Re-tag and export kepler-validator image
         run: |
           make re-tag
           make save-image
@@ -61,7 +71,7 @@ jobs:
           CTR_CMD: docker
           IMAGE_OUTPUT_PATH: ${{env.OUTPUT_DIR}}${{env.VALIDATOR_FILE_NAME}}
 
-      - name: save kepler-validator image as artifact
+      - name: Save kepler-validator image as artifact
         uses: actions/upload-artifact@v3
         with:
           name: validator
@@ -75,20 +85,20 @@ jobs:
       matrix:
         cluster_provider: [kind]
     steps:
-      - name: checkout source
+      - name: Checkout
         uses: actions/checkout@v3
 
-      - name: download Kepler image artifact
+      - name: Download Kepler image artifact
         uses: actions/download-artifact@v3
         with:
           name: kepler
 
-      - name: download kepler-validator image artifact
+      - name: Download kepler-validator image artifact
         uses: actions/download-artifact@v3
         with:
           name: validator
 
-      - name: build manifest
+      - name: Build manifest
         run: make build-manifest OPTS="CI_DEPLOY PROMETHEUS_DEPLOY"
         env:
           CLUSTER_PROVIDER: ${{matrix.cluster_provider}}
@@ -96,7 +106,7 @@ jobs:
           IMAGE_TAG: "devel"
           CTR_CMD: docker
 
-      - name: import Kepler image
+      - name: Import Kepler image
         run: make load-image
         env:
           IMAGE_REPO: "localhost:5001"
@@ -105,7 +115,7 @@ jobs:
           CTR_CMD: docker
           INPUT_PATH: ${{env.KEPLER_FILE_NAME}}
 
-      - name: import kepler-validator image
+      - name: Import kepler-validator image
         run: make load-image
         env:
           IMAGE_REPO: "localhost:5001"
@@ -114,7 +124,7 @@ jobs:
           CTR_CMD: docker
           INPUT_PATH: ${{env.VALIDATOR_FILE_NAME}}
 
-      - name: get Node component power before deploy kind cluster
+      - name: Get Node component power before deploy kind cluster
         run: |
           make get-power
         env:
@@ -123,7 +133,7 @@ jobs:
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
 
-      - name: use Kepler action to deploy cluster
+      - name: Use Kepler action to deploy cluster
         uses: sustainable-computing-io/kepler-action@v0.0.1
         with:
           runningBranch: ${{matrix.cluster_provider}}
@@ -132,7 +142,7 @@ jobs:
           prometheus_enable: true
           grafana_enable: true
 
-      - name: push Kepler image to local registry
+      - name: Push Kepler image to local registry
         run: |
           make push-image
         env:
@@ -141,7 +151,7 @@ jobs:
           IMAGE_TAG: "devel"
           CTR_CMD: docker
 
-      - name: push kepler-validator image to local registry
+      - name: Push kepler-validator image to local registry
         run: |
           make push-image
           make image-prune
@@ -151,7 +161,7 @@ jobs:
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
 
-      - name: get Node component power before deploy kepler
+      - name: Get Node component power before deploy kepler
         run: |
           make get-power
         env:
@@ -160,7 +170,7 @@ jobs:
           IMAGE_TAG: "x86-rapl"
           CTR_CMD: docker
 
-      - name: deploy Kepler on cluster
+      - name: Deploy Kepler on cluster
         run: make cluster-deploy
         env:
           CLUSTER_PROVIDER: ${{matrix.cluster_provider}}
@@ -176,7 +186,7 @@ jobs:
           path: ${{env.ARTIFACT_DIR}}
           retention-days: 10
 
-      - name: run platform validation tests
+      - name: Run platform validation test cases
         run: make platform-validation
         env:
           CLUSTER_PROVIDER: ${{matrix.cluster_provider}}
@@ -187,7 +197,7 @@ jobs:
           kepler_address: localhost:9102
           prometheus_address: localhost:9090
 
-      - name: undeploy Kepler and cleanup the cluster
+      - name: Undeploy Kepler and cleanup the cluster
         run: |
           make cluster-clean
           make cluster-down
