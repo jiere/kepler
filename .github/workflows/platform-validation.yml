@@ -10,7 +10,7 @@ env:
   VALIDATOR_FILE_NAME: "validator.tar.gz"
   ARTIFACT_DIR: "/tmp/artifacts"
   http_proxy: "http://child-prc.intel.com:913"
-  no_proxy: "localhost,127.0.0.1,::1"
+  no_proxy: "localhost"
 
 jobs:
   build-artifacts:
