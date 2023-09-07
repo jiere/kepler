@@ -108,8 +108,8 @@ function platform_validation() {
 	fi
     done
     rm -f kepler.log
-    kubectl port-forward --address localhost -n kepler service/kepler-exporter 9102:9102 &
-    kubectl port-forward --address localhost -n monitoring service/prometheus-k8s 9090:9090 &
+    kubectl port-forward --address localhost -n kepler service/kepler-exporter 9102:9103 &
+    kubectl port-forward --address localhost -n monitoring service/prometheus-k8s 9090:9091 &
     #kubectl get pods -n kepler -o yaml
     cd ./e2e/platform-validation
     ginkgo --tags $tags -v --json-report=platform_validation_report.json --race -cover --vet=all
