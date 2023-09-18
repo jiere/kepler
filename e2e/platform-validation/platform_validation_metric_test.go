@@ -105,8 +105,8 @@ func query_range(metric, queryString string, r promv1.Range, api promv1.API) flo
 		fmt.Printf("Warnings: %v\n", warnings)
 	}
 	tmpList := strings.Split(result.String(), "=>")
-	if len(tmpList) == 0 {
-		fmt.Println("Warning: no result in Prometheus for this query.")
+	if len(tmpList) < 2 {
+		fmt.Printf("Warning: no result in Prometheus for this query. result: %s\n", result.String())
 		return float64(0)
 	}
 	samplePairList := strings.Split(tmpList[1], "\n")
