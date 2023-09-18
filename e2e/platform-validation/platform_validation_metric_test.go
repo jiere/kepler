@@ -72,12 +72,12 @@ func queryNodePower(m string, r promv1.Range, api promv1.API) float64 {
 	return query_range(m, q, r, api)
 }
 
-func queryNamespacePower(m, ns string, r promv1.Range, api promv1.API) float64 {
+func queryNamespacePower(m, ns, mode string, r promv1.Range, api promv1.API) float64 {
 	if !strings.Contains(m, "container") {
 		fmt.Printf("Invalid metric for namespace power: %s\n", m)
 		return float64(0)
 	}
-	q := "sum(irate(" + m + "{container_namespace=~\"" + ns + "\"}[1m]))"
+	q := "sum(irate(" + m + "{container_namespace=~\"" + ns + "\", mode=~\"" + mode + "\"}[1m]))"
 	return query_range(m, q, r, api)
 }
 
@@ -324,9 +324,11 @@ var _ = Describe("Kepler exporter side metrics check", Ordered, func() {
 			//d1: validator measured power for Kind
 			//d2: validator measured power for Kepler
 			var d1, d2 float64
-			//p1: prometheus queried power for Kind
-			//p2: prometheus queried power for Kepler
-			var p1, p2 float64
+			//p1: prometheus queried dynamic power for Kind
+			//p2: prometheus queried dynamic power for Kepler
+			//p3: prometheus queried idle power for Kind
+			//p4: prometheus queried idle power for Kepler
+			var p1, p2, p3, p4 float64
 
 			switch component {
 			case "core":
@@ -345,16 +347,21 @@ var _ = Describe("Kepler exporter side metrics check", Ordered, func() {
 				Skip("Skip as " + metrics + " is not supported in this test case")
 			}
 			for _, n := range kind_namespaces {
-				nsPower := queryNamespacePower(metrics, n, queryRange, v1api)
-				p1 += nsPower
+				nsDynPower := queryNamespacePower(metrics, n, "dynamic", queryRange, v1api)
+				p1 += nsDynPower
+				nsIdlePower := queryNamespacePower(metrics, n, "idle", queryRange, v1api)
+				p3 += nsIdlePower
 			}
-			p2 = queryNamespacePower(metrics, kepler_namespace, queryRange, v1api)
+			p2 = queryNamespacePower(metrics, kepler_namespace, "dynamic", queryRange, v1api)
+			p4 = queryNamespacePower(metrics, kepler_namespace, "idle", queryRange, v1api)
 
 			fmt.Printf("For metric: %s\n", metrics)
 			fmt.Printf("Validator measured kind power(postDeploy - preDeploy) is: %f\n", d1)
-			fmt.Printf("Prometheus queried kind power(related namespaces power sum) is: %f\n", p1)
+			fmt.Printf("Prometheus queried kind dynamic power(related namespaces power sum) is: %f\n", p1)
+			fmt.Printf("Prometheus queried kind idle power(related namespaces power sum) is: %f\n", p3)
 			fmt.Printf("Validator measured kepler power(postDeploy - preDeploy) is: %f\n", d2)
-			fmt.Printf("Prometheus queried kepler power(related namespaces power sum) is: %f\n", p2)
+			fmt.Printf("Prometheus queried kepler dynamic power(related namespaces power sum) is: %f\n", p2)
+			fmt.Printf("Prometheus queried kepler idle power(related namespaces power sum) is: %f\n", p4)
 
 		},
 		EntryDescription("Checking %s"),
