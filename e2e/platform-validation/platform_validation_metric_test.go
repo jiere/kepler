@@ -315,20 +315,9 @@ var _ = Describe("Kepler exporter side metrics check", Ordered, func() {
 				Skip("Skip as " + metrics + " should not be supported in this platform")
 			}
 			component := strings.Split(metrics[17:], "_")[0]
-			kind_namespaces := []string{
-				"kube-system",
-				"monitoring",
-				"local-path-storage",
-			}
-			kepler_namespace := "kepler"
 			//d1: validator measured power for Kind
 			//d2: validator measured power for Kepler
 			var d1, d2 float64
-			//p1: prometheus queried dynamic power for Kind
-			//p2: prometheus queried dynamic power for Kepler
-			//p3: prometheus queried idle power for Kind
-			//p4: prometheus queried idle power for Kepler
-			var p1, p2, p3, p4 float64
 
 			switch component {
 			case "core":
@@ -346,23 +335,27 @@ var _ = Describe("Kepler exporter side metrics check", Ordered, func() {
 			default:
 				Skip("Skip as " + metrics + " is not supported in this test case")
 			}
-			for _, n := range kind_namespaces {
-				nsDynPower := queryNamespacePower(metrics, n, "dynamic", queryRange, v1api)
-				p1 += nsDynPower
-				nsIdlePower := queryNamespacePower(metrics, n, "idle", queryRange, v1api)
-				p3 += nsIdlePower
-			}
-			p2 = queryNamespacePower(metrics, kepler_namespace, "dynamic", queryRange, v1api)
-			p4 = queryNamespacePower(metrics, kepler_namespace, "idle", queryRange, v1api)
 
 			fmt.Printf("For metric: %s\n", metrics)
 			fmt.Printf("Validator measured kind power(postDeploy - preDeploy) is: %f\n", d1)
-			fmt.Printf("Prometheus queried kind dynamic power(related namespaces power sum) is: %f\n", p1)
-			fmt.Printf("Prometheus queried kind idle power(related namespaces power sum) is: %f\n", p3)
 			fmt.Printf("Validator measured kepler power(postDeploy - preDeploy) is: %f\n", d2)
-			fmt.Printf("Prometheus queried kepler dynamic power(related namespaces power sum) is: %f\n", p2)
-			fmt.Printf("Prometheus queried kepler idle power(related namespaces power sum) is: %f\n", p4)
+			var totalDyn, totalIdle float64
+			for n, _ := range podlistMap {
 
+				nsDynPower := queryNamespacePower(metrics, n, "dynamic", queryRange, v1api)
+				fmt.Printf("Prometheus queried dynamic power for namespace(%s) is: %.3f\n", n, nsDynPower)
+				totalDyn += nsDynPower
+				nsIdlePower := queryNamespacePower(metrics, n, "idle", queryRange, v1api)
+				fmt.Printf("Prometheus queried idle power for namespace(%s) is: %.3f\n", n, nsIdlePower)
+				totalIdle += nsIdlePower
+			}
+			fmt.Printf("Prometheus queried all namespaces dynamic power is: %.3f\n", totalDyn)
+			fmt.Printf("Prometheus queried all namespaces idle power is: %.3f\n", totalIdle)
+
+			sysDynPower := queryNamespacePower(metrics, "system", "dynamic", queryRange, v1api)
+			fmt.Printf("Prometheus queried dynamic power for system_processes is: %.3f\n", sysDynPower)
+			sysIdlePower := queryNamespacePower(metrics, "system", "idle", queryRange, v1api)
+			fmt.Printf("Prometheus queried idle power for system_processes is: %.3f\n", sysIdlePower)
 		},
 		EntryDescription("Checking %s"),
 		Entry(nil, "kepler_container_core_joules_total", &raplCoreEnable),
