@@ -17,7 +17,7 @@ jobs:
     runs-on: [self-hosted, linux, x64]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
       - name: Set up Docker Buildx
@@ -96,7 +96,7 @@ jobs:
         cluster_provider: [kind]
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Download Kepler test image artifact
         uses: actions/download-artifact@v3
@@ -144,9 +144,8 @@ jobs:
           CTR_CMD: docker
 
       - name: Use Kepler action to deploy cluster
-        uses: sustainable-computing-io/kepler-action@v0.0.1
+        uses: sustainable-computing-io/kepler-action@v0.0.2
         with:
-          runningBranch: ${{matrix.cluster_provider}}
           cluster_provider: ${{matrix.cluster_provider}}
           local_dev_cluster_version: v0.0.3
           prometheus_enable: true
